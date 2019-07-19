@@ -1,22 +1,23 @@
 <template>
   <div class="login">
     <div class="container">
-        <img src="../assets/gan.png" alt="" class="avatar">
+      <img src="../assets/gan.png" alt class="avatar" />
       <el-form :model="loginForm" :rules="rules" ref="loginForm" class="demo-ruleForm">
         <el-form-item prop="username">
-          <el-input v-model="loginForm.username" placeholder="用户名"></el-input>
+          <el-input v-model="loginForm.username" placeholder="用户名" prefix-icon="myicon myicon-user"></el-input>
         </el-form-item>
         <el-form-item prop="password">
-          <el-input v-model="loginForm.password" placeholder="请输入密码"></el-input>
+          <el-input v-model="loginForm.password" placeholder="请输入密码" prefix-icon="myicon myicon-key"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" class="login-btn" >登陆</el-button>
+          <el-button type="primary" class="login-btn" @click="loging">登陆</el-button>
         </el-form-item>
       </el-form>
     </div>
   </div>
 </template>
 <script>
+import { login } from '@/api/user_login.js'
 export default {
   data () {
     return {
@@ -25,12 +26,40 @@ export default {
         password: '123456'
       },
       rules: {
-        username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+        username: [
+          { required: true, message: '请输入用户名', trigger: 'blur' }
+        ],
         password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
       }
     }
+  },
+  methods: {
+    loging () {
+      this.$refs.loginForm.validate((valid) => {
+        if (valid) {
+          login(this.loginForm)
+            .then((res) => {
+              console.log(res.data.meta.status)
+              if (res.data.meta.status === 200) {
+                this.$router.push({ name: 'home' })
+              } else {
+                this.$message({
+                  message: res.data.meta.msg,
+                  type: 'warning'
+                })
+              }
+            })
+            .catch((err) => {
+              console.logl(err)
+              this.$message.error('登录失败')
+            })
+        } else {
+          this.$message.error('数据输入错误')
+          return false
+        }
+      })
+    }
   }
-
 }
 </script>
 <style lang="less" scoped>
