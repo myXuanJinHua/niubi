@@ -39,8 +39,11 @@ export default {
         if (valid) {
           login(this.loginForm)
             .then((res) => {
-              console.log(res.data.meta.status)
+              // console.log(res.data.meta.status)
               if (res.data.meta.status === 200) {
+                // 登录成功后保存token
+                localStorage.setItem('itcast_token', res.data.data.token)
+                // 进行路由跳转
                 this.$router.push({ name: 'home' })
               } else {
                 this.$message({
