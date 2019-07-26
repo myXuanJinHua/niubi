@@ -46,3 +46,11 @@ export const changeState = (uid, type) => {
     method: 'put'
   })
 }
+// 发送分配用户角色
+export const setUserRole = (data) => {
+  return axios({
+    url: `users/${data.id}/role`,
+    method: 'put',
+    data
+  })
+}

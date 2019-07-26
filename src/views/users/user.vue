@@ -26,7 +26,12 @@
       <el-table-column prop="mobile" label="电话" width="300"></el-table-column>
       <el-table-column label="用户状态" width="100">
         <template slot-scope="scope">
-          <el-switch v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949" @change="changesta(scope.row.id,scope.row.mg_state)"></el-switch>
+          <el-switch
+            v-model="scope.row.mg_state"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+            @change="changesta(scope.row.id,scope.row.mg_state)"
+          ></el-switch>
         </template>
       </el-table-column>
       <el-table-column label="操作">
@@ -35,7 +40,7 @@
             <el-button type="primary" icon="el-icon-edit" @click="showEdit(scope.row)"></el-button>
           </el-tooltip>
           <el-tooltip class="item" effect="dark" content="分配角色" placement="top-end">
-            <el-button type="primary" icon="el-icon-d-caret"></el-button>
+            <el-button type="primary" icon="el-icon-d-caret" @click="showdistri(scope.row)"></el-button>
           </el-tooltip>
           <el-tooltip class="item" effect="dark" content="删除" placement="top-end">
             <el-button type="primary" icon="el-icon-delete" @click="delUser(scope.row.id)"></el-button>
@@ -82,23 +87,63 @@
         <el-button type="primary" @click="editSumbit">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 分配用户的dialog -->
+    <el-dialog title="分配用户角色" :visible.sync="distridialogFormVisible">
+      <el-form :model="distriForm" :label-width="'300px'" ref='distriForm'>
+        <el-form-item label="用户名称">
+          <span>{{distriForm.username}}</span>
+        </el-form-item>
+        <el-form-item label="用户角色">
+          <el-select v-model="distriForm.rid" clearable placeholder="请选择">
+            <el-option
+              v-for="item in roleList"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id "
+            ></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="distridialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="getUerRole">确 定</el-button>
+      </div>
+    </el-dialog>
     <!-- 分页功能 -->
-     <el-pagination
+    <el-pagination
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
       :current-page="userobj.pagenum"
       :page-sizes="[1, 3, 5, 10]"
       :page-size="userobj.pagesize"
       layout="total, sizes, prev, pager, next, jumper"
-      :total="sun">
-    </el-pagination>
+      :total="sun"
+    ></el-pagination>
   </div>
 </template>
 <script>
-import { getAllUserList, addUserList, delUser, editUser, changeState } from '@/api/user_login'
+import {
+  getAllUserList,
+  addUserList,
+  delUser,
+  editUser,
+  changeState,
+  setUserRole
+} from '@/api/user_login'
+import { getAllRoleList } from '@/api/role_index.js'
 export default {
   data () {
     return {
+      // 所有角色的数据
+      roleList: [],
+      // 分配用户表单项
+      distriForm: {
+        username: '',
+        id: '',
+        rid: ''
+      },
+      // 分配用户角色的隐藏
+      distridialogFormVisible: false,
       // 编辑用户的表单项
       editForm: {
         username: '',
@@ -133,18 +178,22 @@ export default {
         username: [
           { required: true, message: '请输入用户名', trigger: 'blur' }
         ],
-        password: [
-          { required: true, message: '请输入密码', trigger: 'blur' }
-        ],
+        password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
         email: [
-
           { required: true, message: '请输入邮箱', trigger: 'blur' },
-          { pattern: /\w+[@]\w+[.]\w+/, message: '请输入合法的邮箱', trigger: 'blur' }
-
+          {
+            pattern: /\w+[@]\w+[.]\w+/,
+            message: '请输入合法的邮箱',
+            trigger: 'blur'
+          }
         ],
         mobile: [
           { required: true, message: '请输入手机号码', trigger: 'blur' },
-          { pattern: /^1\d{10}$/, message: '请输入合法手机号码', trigger: 'blur' }
+          {
+            pattern: /^1\d{10}$/,
+            message: '请输入合法手机号码',
+            trigger: 'blur'
+          }
         ]
       }
     }
@@ -156,7 +205,9 @@ export default {
         .then(res => {
           // console.log(res)
           if (res.data.meta.status === 200) {
-            this.total = Math.ceil(res.data.data.total / res.data.data.pagesize)
+            this.total = Math.ceil(
+              res.data.data.total / res.data.data.pagesize
+            )
             this.sun = res.data.data.total
             this.tableData = res.data.data.users
             //   console.log(this.tableData)
@@ -168,10 +219,10 @@ export default {
     },
     // 添加用户
     addSumbit () {
-      this.$refs.userForm.validate((vaild) => {
+      this.$refs.userForm.validate(vaild => {
         if (vaild) {
           addUserList(this.userForm)
-            .then((res) => {
+            .then(res => {
               console.log(res)
               if (res.data.meta.status === 201) {
                 // 弹出提示框
@@ -187,7 +238,7 @@ export default {
                 this.init()
               }
             })
-            .catch((err) => {
+            .catch(err => {
               console.log(err)
             })
         } else {
@@ -217,33 +268,35 @@ export default {
         cancelButtonText: '取消',
         type: 'warning',
         center: true
-      }).then(() => {
-        delUser(id)
-          .then((res) => {
-            if (res.data.meta.status === 200) {
-              // console.log(res.data.meta.status)
-              this.$message({
-                type: 'success',
-                message: '删除成功!'
-              })
-              // console.log(this.tableData)
-              if (this.tableData.length === 1) {
-                --this.userobj.pagenum
-                this.init()
-              } else {
-                this.init()
-              }
-            }
-          })
-          .catch((err) => {
-            console.log('文件删除出错', err)
-          })
-      }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: '已取消删除'
-        })
       })
+        .then(() => {
+          delUser(id)
+            .then(res => {
+              if (res.data.meta.status === 200) {
+                // console.log(res.data.meta.status)
+                this.$message({
+                  type: 'success',
+                  message: '删除成功!'
+                })
+                // console.log(this.tableData)
+                if (this.tableData.length === 1) {
+                  --this.userobj.pagenum
+                  this.init()
+                } else {
+                  this.init()
+                }
+              }
+            })
+            .catch(err => {
+              console.log('文件删除出错', err)
+            })
+        })
+        .catch(() => {
+          this.$message({
+            type: 'info',
+            message: '已取消删除'
+          })
+        })
     },
     // 显示编辑用户数据
     showEdit (row) {
@@ -255,11 +308,11 @@ export default {
     },
     // 发送编辑用户数据
     editSumbit () {
-      this.$refs.editForm.validate((vaild) => {
+      this.$refs.editForm.validate(vaild => {
         if (vaild) {
           console.log(this.userForm)
           editUser(this.editForm)
-            .then((res) => {
+            .then(res => {
               console.log(res)
               if (res.data.meta.status === 200) {
                 // 弹出提示框
@@ -275,7 +328,7 @@ export default {
                 this.init()
               }
             })
-            .catch((err) => {
+            .catch(err => {
               console.log(err)
             })
         } else {
@@ -288,20 +341,56 @@ export default {
     },
     // 切换状态
     changesta (id, type) {
-      changeState(id, type)
-        .then((res) => {
-          // console.log(res)
-          if (res.data.meta.status === 200) {
-            this.$message({
-              message: res.data.meta.msg,
-              type: 'success'
-            })
-          }
+      changeState(id, type).then(res => {
+        // console.log(res)
+        if (res.data.meta.status === 200) {
+          this.$message({
+            message: res.data.meta.msg,
+            type: 'success'
+          })
+        }
+      })
+    },
+    // 显示分配用户表单角色数据
+    showdistri (row) {
+      this.distridialogFormVisible = true
+      this.distriForm.username = row.username
+      this.distriForm.id = row.id
+      this.distriForm.rid = row.rid
+    },
+    // 获取所有的角色数据
+    async roleinit () {
+      let res = await getAllRoleList()
+      // console.log(res)
+      this.roleList = res.data.data
+    },
+    // 把修改的分配角色上传
+    getUerRole () {
+      if (!this.distriForm.rid) {
+        this.$message({
+          type: 'warning',
+          message: '请选择一个角色'
         })
+      } else {
+        setUserRole(this.distriForm)
+          .then((res) => {
+            // console.log(res)
+            this.$message({
+              type: 'success',
+              message: '成功选择角色'
+            })
+            this.distridialogFormVisible = false
+            this.init()
+          })
+          .catch((err) => {
+            console.log(err)
+          })
+      }
     }
   },
   mounted () {
     this.init()
+    this.roleinit()
   }
 }
 </script>

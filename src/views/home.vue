@@ -1,46 +1,28 @@
 <template>
   <div class="home">
     <el-container>
+      <!-- 侧边菜单项 -->
       <el-aside width="auto">
         <div class="logo"></div>
         <el-menu
           :collapse="iscollapse"
-          z
-          :unique-opened="true"
+          :unique-opened="false"
           :router="true"
-          :default-active="'1'"
+          :default-active="'/home/users'"
           class="el-menu-vertical-demo"
           background-color="#545c64"
           text-color="#fff"
           active-text-color="#ffd04b"
         >
-          <el-submenu index="1">
+          <el-submenu :index="item.id" v-for=" item in menuList" :key="item.id">
             <template slot="title">
               <i class="el-icon-location"></i>
-              <span>用户管理</span>
+              <span>{{item.authName}}</span>
             </template>
-            <el-menu-item index="/home/users">
+            <el-menu-item :index="'/home/'+tag.path" v-for="tag in item.children" :key="tag.id">
               <template slot="title">
                 <i class="el-icon-location"></i>
-                <span>用户列表</span>
-              </template>
-            </el-menu-item>
-          </el-submenu>
-          <el-submenu index="2">
-            <template slot="title">
-              <i class="el-icon-location"></i>
-              <span>权限管理</span>
-            </template>
-            <el-menu-item index="2-1">
-              <template slot="title">
-                <i class="el-icon-location"></i>
-                <span>角色列表</span>
-              </template>
-            </el-menu-item>
-            <el-menu-item index="2-2">
-              <template slot="title">
-                <i class="el-icon-location"></i>
-                <span>权限列表</span>
+                <span>{{tag.authName}}</span>
               </template>
             </el-menu-item>
           </el-submenu>
@@ -60,11 +42,31 @@
   </div>
 </template>
 <script>
+import { leftMenuList } from '@/api/right_indx.js'
 export default {
   data () {
     return {
-      iscollapse: false
+      iscollapse: false,
+      // 菜单栏的数据数组
+      menuList: []
     }
+  },
+  methods: {
+    init () {
+      leftMenuList()
+        .then(res => {
+          console.log(res)
+          if (res.data.meta.status === 200) {
+            this.menuList = res.data.data
+          }
+        })
+        .catch(err => {
+          console.log(err)
+        })
+    }
+  },
+  mounted () {
+    this.init()
   }
 }
 </script>
