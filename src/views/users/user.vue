@@ -114,10 +114,10 @@
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
       :current-page="userobj.pagenum"
-      :page-sizes="[1, 3, 5, 10]"
+      :page-sizes="[1, 4, 6, 10]"
       :page-size="userobj.pagesize"
       layout="total, sizes, prev, pager, next, jumper"
-      :total="sun"
+      :total="total"
     ></el-pagination>
   </div>
 </template>
@@ -166,11 +166,10 @@ export default {
       userobj: {
         query: '',
         pagenum: 1,
-        pagesize: 2
+        pagesize: 4
       },
       // 总页码数
-      total: 2,
-      sun: 0,
+      total: 0,
       // 页面用户列表的数据
       tableData: [],
       // 表单的验证规则
@@ -208,7 +207,7 @@ export default {
             this.total = Math.ceil(
               res.data.data.total / res.data.data.pagesize
             )
-            this.sun = res.data.data.total
+            this.total = res.data.data.total
             this.tableData = res.data.data.users
             //   console.log(this.tableData)
           }

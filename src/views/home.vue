@@ -14,7 +14,7 @@
           text-color="#fff"
           active-text-color="#ffd04b"
         >
-          <el-submenu :index="item.id" v-for=" item in menuList" :key="item.id">
+          <el-submenu :index="item.id+''" v-for=" item in menuList" :key="item.id">
             <template slot="title">
               <i class="el-icon-location"></i>
               <span>{{item.authName}}</span>
@@ -29,11 +29,14 @@
         </el-menu>
       </el-aside>
       <el-container>
+         <!-- 头部导航栏 -->
         <el-header>
           <span class="el-icon-loading toggle-btn" @click="iscollapse=!iscollapse"></span>
           <span class="system-title">电商后台管理系统</span>
+
           <a href="javascript:;" class="welcome">退出</a>
         </el-header>
+        <!-- 主体部分 要挖坑 -->
         <el-main>
           <router-view></router-view>
         </el-main>
@@ -55,7 +58,7 @@ export default {
     init () {
       leftMenuList()
         .then(res => {
-          console.log(res)
+          // console.log(res)
           if (res.data.meta.status === 200) {
             this.menuList = res.data.data
           }
